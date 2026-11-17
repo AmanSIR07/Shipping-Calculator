@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AKR_Shipping — Interactive Shipping Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">📦</div>
+        <div>
+          <h1>AKR_Shipping <span>Pro</span></h1>
+          <p>Volumetric &amp; Zone-Based Freight Rate Estimator</p>
+        </div>
+      </div>
+
+      <div class="controls-bar">
+        <div class="segmented-control" aria-label="Unit System">
+          <button type="button" class="seg-btn active" data-unit="metric">Metric (kg / cm)</button>
+          <button type="button" class="seg-btn" data-unit="imperial">Imperial (lbs / in)</button>
+        </div>
+
+        <div class="segmented-control" aria-label="Currency">
+          <button type="button" class="seg-btn active" data-currency="INR">₹ INR</button>
+          <button type="button" class="seg-btn" data-currency="USD">$ USD</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-grid">
+      <!-- Left Column: Form Inputs -->
+      <section class="panel input-panel">
+        <!-- Route & Zone -->
+        <div class="card">
+          <div class="card-header">
+            <h2>1. Route &amp; Shipping Zone</h2>
+            <span class="badge" id="eta-badge">ETA: 2–3 Days</span>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="origin">Origin City / Pincode</label>
+              <input type="text" id="origin" value="Mumbai — 400001" placeholder="e.g. Delhi — 110001" />
+            </div>
+            <div class="form-group">
+              <label for="destination">Destination City / Pincode</label>
+              <input type="text" id="destination" value="Bengaluru — 560001" placeholder="e.g. Kolkata — 700001" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="zone">Shipping Zone</label>
+            <select id="zone">
+              <option value="local">Zone A — Local / Intra-City</option>
+              <option value="regional">Zone B — Zonal / Regional (Same State/Region)</option>
+              <option value="metro" selected>Zone C — National Metro-to-Metro</option>
+              <option value="rest">Zone D — Rest of India (Tier 2/3 &amp; Remote)</option>
+              <option value="intl">Zone E — International Global Air</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Package Weight & Dimensions -->
+        <div class="card">
+          <div class="card-header">
+            <h2>2. Package Weight &amp; Dimensions</h2>
+            <div class="presets">
+              <button type="button" class="preset-chip" data-preset="envelope">📄 Flyer (0.5kg)</button>
+              <button type="button" class="preset-chip" data-preset="small">📦 Small Box</button>
+              <button type="button" class="preset-chip" data-preset="medium">🧳 Medium Carton</button>
+              <button type="button" class="preset-chip" data-preset="large">🏭 Bulk Crate</button>
+            </div>
+          </div>
+
+          <div class="form-row four-col">
+            <div class="form-group">
+              <label for="weight">Actual Weight (<span class="unit-weight">kg</span>)</label>
+              <input type="number" id="weight" min="0.1" step="0.1" value="2.5" />
+            </div>
+            <div class="form-group">
+              <label for="length">Length (<span class="unit-dim">cm</span>)</label>
+              <input type="number" id="length" min="1" step="1" value="35" />
+            </div>
+            <div class="form-group">
+              <label for="width">Width (<span class="unit-dim">cm</span>)</label>
+              <input type="number" id="width" min="1" step="1" value="25" />
+            </div>
+            <div class="form-group">
+              <label for="height">Height (<span class="unit-dim">cm</span>)</label>
+              <input type="number" id="height" min="1" step="1" value="20" />
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="quantity">Number of Packages</label>
+              <input type="number" id="quantity" min="1" max="500" step="1" value="1" />
+            </div>
+            <div class="form-group">
+              <label for="declared-value">Declared Goods Value (<span class="curr-symbol">₹</span>)</label>
+              <input type="number" id="declared-value" min="0" step="100" value="5000" />
+            </div>
+          </div>
+
+          <!-- Weight Telemetry Strip -->
+          <div class="weight-telemetry">
+            <div class="telemetry-item">
+              <span>Actual Weight</span>
+              <strong id="disp-actual-wt">2.50 kg</strong>
+            </div>
+            <div class="telemetry-item">
+              <span>Volumetric Weight</span>
+              <strong id="disp-vol-wt">3.50 kg</strong>
+            </div>
+            <div class="telemetry-item highlight">
+              <span>Billed Slab (Per Box)</span>
+              <strong id="disp-chargeable-wt">3.50 kg</strong>
+            </div>
+          </div>
+          <p class="helper-note" id="volumetric-note">
+            Volumetric weight exceeds actual weight (L × W × H ÷ 5000) and is used for billing.
+          </p>
+        </div>
+
+        <!-- Service Speed & Add-ons -->
+        <div class="card">
+          <div class="card-header">
+            <h2>3. Service Speed &amp; Add-Ons</h2>
+          </div>
+
+          <div class="service-grid" id="service-options">
+            <label class="service-card">
+              <input type="radio" name="service" value="standard" />
+              <div class="service-content">
+                <span class="service-title">🚚 Standard Surface</span>
+                <span class="service-desc">Economical road network</span>
+                <span class="service-mult">1.0x Base Rate</span>
+              </div>
+            </label>
+
+            <label class="service-card active">
+              <input type="radio" name="service" value="express" checked />
+              <div class="service-content">
+                <span class="service-title">✈️ Express Air</span>
+                <span class="service-desc">Priority air cargo linehaul</span>
+                <span class="service-mult">1.65x Base Rate</span>
+              </div>
+            </label>
+
+            <label class="service-card">
+              <input type="radio" name="service" value="priority" />
+              <div class="service-content">
+                <span class="service-title">⚡ Next-Day Priority</span>
+                <span class="service-desc">Guaranteed next-business-day</span>
+                <span class="service-mult">2.4x Base Rate</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="addons-grid">
+            <label class="addon-toggle">
+              <input type="checkbox" id="addon-fragile" />
+              <span>🛡️ Fragile Handling</span>
+            </label>
+            <label class="addon-toggle">
+              <input type="checkbox" id="addon-cod" />
+              <span>💵 Cash on Delivery (COD)</span>
+            </label>
+            <label class="addon-toggle">
+              <input type="checkbox" id="addon-insurance" checked />
+              <span>🔒 Transit Insurance (1.5%)</span>
+            </label>
+            <label class="addon-toggle">
+              <input type="checkbox" id="addon-pod" />
+              <span>📲 OTP / Signature POD</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live Cost Breakdown -->
+      <aside class="panel summary-panel">
+        <div class="card sticky-card">
+          <div class="quote-top">
+            <div>
+              <span class="quote-label">ESTIMATED TOTAL FREIGHT</span>
+              <div class="total-price" id="total-price">₹0.00</div>
+              <p class="route-summary" id="route-summary">Mumbai → Bengaluru • 1 Box</p>
+            </div>
+            <div class="delivery-pill" id="delivery-pill">2–3 Days</div>
+          </div>
+
+          <div class="breakdown-list">
+            <div class="breakdown-row">
+              <span>Base Freight (<span id="bill-wt-summary">3.5 kg × 1</span>)</span>
+              <strong id="cost-base">₹0.00</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>Fuel Surcharge (12%)</span>
+              <strong id="cost-fuel">₹0.00</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>Optional Add-Ons &amp; Insurance</span>
+              <strong id="cost-addons">₹0.00</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>GST / Customs Tax (18%)</span>
+              <strong id="cost-tax">₹0.00</strong>
+            </div>
+          </div>
+
+          <div class="summary-actions">
+            <button type="button" class="btn btn-primary" id="save-quote-btn">
+              + Save to Compare
+            </button>
+            <button type="button" class="btn btn-secondary" id="copy-quote-btn">
+              📋 Copy Quote
+            </button>
+            <button type="button" class="btn btn-ghost" id="reset-btn" title="Reset Form">
+              ↺
+            </button>
+          </div>
+          <p class="toast-msg" id="toast-msg" aria-live="polite"></p>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Saved Quotes Comparison Tray -->
+    <section class="card comparison-section">
+      <div class="card-header">
+        <h2>Saved Quotes Comparison (<span id="saved-count">0</span>)</h2>
+        <button type="button" class="btn-link" id="clear-quotes-btn">Clear All</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Zone &amp; Service</th>
+              <th>Billed Weight</th>
+              <th>Add-Ons</th>
+              <th>ETA</th>
+              <th>Total Cost</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="saved-quotes-body">
+            <tr class="empty-row">
+              <td colspan="7">No quotes saved yet. Click <strong>"+ Save to Compare"</strong> to benchmark options.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
